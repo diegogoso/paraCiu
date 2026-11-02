@@ -1,0 +1,619 @@
+openapi: 3.0.3
+info:
+  title: UnaHur Anti-Social Net API
+  version: 1.0.0
+  description: API REST del trabajo práctico de Estrategias de Persistencia.
+servers:
+  - url: http://localhost:3000
+paths:
+  /health:
+    get:
+      summary: Verifica que el servidor esté disponible
+      responses:
+        "200":
+          description: Servidor disponible
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+  /api/users:
+    get:
+      summary: Listar usuarios
+      responses:
+        "200":
+          description: Usuarios encontrados
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+    post:
+      summary: Crear un usuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserInput"
+      responses:
+        "201":
+          description: Usuario creado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "409":
+          description: El nickName ya existe
+  /api/users/{id}/followers:
+    get:
+      summary: Lista los seguidores de un usuario
+      tags:
+        - Usuarios
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Lista de seguidores obtenida con éxito
+        '404':
+          description: Usuario no encontrado
+  /api/users/{id}/following:
+    get:
+      summary: Lista los usuarios que sigue un usuario
+      tags:
+        - Usuarios
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Lista de cuentas seguidas obtenida con éxito
+        '404':
+          description: Usuario no encontrado
+  /api/users/{id}/following/{followedId}:
+    post:
+      summary: Seguir a un usuario
+      tags:
+        - Usuarios
+      parameters:
+        - name: id
+          in: path
+          description: ID del usuario que va a seguir
+          required: true
+          schema:
+            type: integer
+        - name: followedId
+          in: path
+          description: ID del usuario a ser seguido
+          required: true
+          schema:
+            type: integer
+      responses:
+        '201':
+          description: Usuario seguido correctamente
+        '400':
+          description: No puede seguirse a sí mismo
+        '404':
+          description: Usuario seguidor o a seguir no encontrado
+        '409':
+          description: Ya sigue a esta cuenta
+    delete:
+      summary: Dejar de seguir a un usuario
+      tags:
+        - Usuarios
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: followedId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Se dejó de seguir al usuario
+        '404':
+          description: Relación no encontrada
+  /api/posts/{postId}/tags/{tagId}:
+    post:
+      summary: Asignar una etiqueta a una publicación
+      tags:
+        - Posts
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: tagId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '201':
+          description: Etiqueta asignada con éxito al post
+        '404':
+          description: Post o Etiqueta no encontrados
+        '409':
+          description: El post ya tiene asignada esta etiqueta
+    delete:
+      summary: Quitar una etiqueta de una publicación
+      tags:
+        - Posts
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: tagId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Etiqueta quitada con éxito
+        '404':
+          description: El post no tiene asignada esta etiqueta
+  /api/users/{id}:
+    get:
+      summary: Obtener un usuario
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Usuario encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          $ref: "#/components/responses/InvalidId"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      summary: Actualizar un usuario
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserInput"
+      responses:
+        "200":
+          description: Usuario actualizado
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      summary: Eliminar un usuario
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "204":
+          description: Usuario eliminado
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/users/nickname/{nickName}:
+    get:
+      summary: Obtener un usuario por nickName
+      parameters:
+        - name: nickName
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 40
+      responses:
+        "200":
+          description: Usuario encontrado
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/posts:
+    get:
+      summary: Listar publicaciones
+      responses:
+        "200":
+          description: Publicaciones encontradas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Post"
+    post:
+      summary: Crear una publicación
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostInput"
+      responses:
+        "201":
+          description: Publicación creada
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/posts/{id}:
+    get:
+      summary: Obtener una publicación con tags, imágenes y comentarios visibles
+      description: Los comentarios con isVisible igual a false no se incluyen en la respuesta.
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Publicación encontrada con sus relaciones
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+        "400":
+          $ref: "#/components/responses/InvalidId"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      summary: Actualizar una publicación
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostInput"
+      responses:
+        "200":
+          description: Publicación actualizada
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      summary: Eliminar una publicación
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "204":
+          description: Publicación eliminada
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/posts/{postId}/comments:
+    get:
+      summary: Listar comentarios visibles de una publicación
+      parameters:
+        - $ref: "#/components/parameters/PostId"
+      responses:
+        "200":
+          description: Comentarios visibles
+    post:
+      summary: Crear un comentario en una publicación
+      parameters:
+        - $ref: "#/components/parameters/PostId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommentInput"
+      responses:
+        "201":
+          description: Comentario creado
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/posts/{postId}/images:
+    get:
+      summary: Listar las imágenes de una publicación
+      tags:
+        - Posts
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Lista de imágenes obtenida
+    post:
+      summary: Subir una imagen a una publicación
+      description: Sube un archivo de imagen físicamente al servidor usando multipart/form-data.
+      tags:
+        - Posts
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+                  description: Archivo de imagen a subir (jpg, png)
+      responses:
+        '201':
+          description: Imagen subida y guardada con éxito
+        '400':
+          description: Archivo inválido o no enviado
+        '404':
+          description: Post no encontrado
+  /api/posts/{postId}/images/{imageId}:
+    delete:
+      summary: Eliminar una imagen de una publicación
+      tags:
+        - Posts
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: imageId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Imagen eliminada con éxito
+        '404':
+          description: Imagen o post no encontrados
+  /api/comments:
+    get:
+      summary: Listar comentarios visibles
+      parameters:
+        - name: postId
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Comentarios visibles
+        "400":
+          $ref: "#/components/responses/ValidationError"
+    post:
+      summary: Crear un comentario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommentInput"
+      responses:
+        "201":
+          description: Comentario creado
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/comments/{id}:
+    get:
+      summary: Obtener un comentario visible
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Comentario encontrado
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      summary: Actualizar un comentario
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommentInput"
+      responses:
+        "200":
+          description: Comentario actualizado
+        "400":
+          $ref: "#/components/responses/ValidationError"
+    delete:
+      summary: Eliminar un comentario
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "204":
+          description: Comentario eliminado
+  /api/tags:
+    get:
+      summary: Listar etiquetas
+      responses:
+        "200":
+          description: Etiquetas encontradas
+    post:
+      summary: Crear una etiqueta
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+      responses:
+        "201":
+          description: Etiqueta creada
+        "400":
+          $ref: "#/components/responses/ValidationError"
+  /api/tags/{id}:
+    get:
+      summary: Obtener una etiqueta
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Etiqueta encontrada
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      summary: Actualizar una etiqueta
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+      responses:
+        "200":
+          description: Etiqueta actualizada
+    delete:
+      summary: Eliminar una etiqueta
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "204":
+          description: Etiqueta eliminada
+components:
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+    PostId:
+      name: postId
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+  responses:
+    ValidationError:
+      description: Datos inválidos
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: Datos inválidos
+    InvalidId:
+      description: El parámetro no es un entero positivo
+    NotFound:
+      description: Recurso no encontrado
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        nickName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    UserInput:
+      type: object
+      required: [nickName]
+      properties:
+        nickName:
+          type: string
+          minLength: 2
+          maxLength: 40
+    PostInput:
+      type: object
+      required: [description, userId]
+      properties:
+        description:
+          type: string
+        userId:
+          type: integer
+          minimum: 1
+        images:
+          type: array
+          items:
+            type: string
+            format: uri
+        tagIds:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+    CommentInput:
+      type: object
+      required: [message, userId]
+      properties:
+        message:
+          type: string
+        userId:
+          type: integer
+          minimum: 1
+        postId:
+          type: integer
+          minimum: 1
+    Post:
+      allOf:
+        - $ref: "#/components/schemas/PostInput"
+        - type: object
+          properties:
+            id:
+              type: integer
+            author:
+              $ref: "#/components/schemas/User"
+            images:
+              type: array
+              items:
+                type: object
+            tags:
+              type: array
+              items:
+                type: object
+            comments:
+              type: array
+              description: Solo contiene comentarios cuyo atributo virtual isVisible es true.
+              items:
+                $ref: "#/components/schemas/CommentInput"
